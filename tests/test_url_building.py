@@ -363,3 +363,24 @@ def test_versioning(app, path, version, expected):
 
     url = app.url_for("handler")
     assert url == expected
+
+
+def test_url_for_path_escaping(app):
+    @app.get("/catalog/<label:str>", name="item", unquote=True)
+    async def item(request, label):
+        page = request.args.get("page")
+        return text(f"{label}|page={page}")
+
+    url1 = app.url_for("item", label="C# guide", page=2, _anchor="details")
+    assert url1 == "/catalog/C%23 guide?page=2#details"
+    _, response1 = app.test_client.get(url1)
+    assert response1.status == 200
+    assert response1.text == "C# guide|page=2"
+
+    url2 = app.url_for("item", label="Why?", page=2)
+    assert url2 == "/catalog/Why%3F?page=2"
+    _, response2 = app.test_client.get(url2)
+    assert response2.status == 200
+    assert response2.text == "Why?|page=2"
+
+

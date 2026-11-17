@@ -1119,8 +1119,13 @@ class Sanic(
                     raise URLBuildError(msg)
 
             # replace the parameter in the URL with the supplied value
+            # Ensure path-breaking delimiters like '#' and '?' are escaped
+            # so they do not interfere with query string or fragment parsing
+            escaped_param = (
+                supplied_param.replace("#", "%23").replace("?", "%3F")
+            )
             replacement_regex = f"(<{param_info.name}.*?>)"
-            out = re.sub(replacement_regex, supplied_param, out)
+            out = re.sub(replacement_regex, escaped_param, out)
 
         # parse the remainder of the keyword arguments into a querystring
         query_string = urlencode(kwargs, doseq=True) if kwargs else ""
