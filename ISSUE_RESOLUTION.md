@@ -8,7 +8,7 @@
 
 ---
 
-## 2. Root Cause Analysis
+## 2. Problem Description & Root Cause Analysis
 In `Sanic.url_for`:
 ```python
 # replace the parameter in the URL with the supplied value
@@ -58,6 +58,11 @@ And upon requesting the URL with the test client:
 `Response: 200 'C|page=None'` (parameter truncated at `C` and `page` was lost).
 
 ---
+
+## Solution Approach
+1. **Follow RFC 3986 Path Component Rules:** Route parameter values interpolated into URL path segments in `url_for()` must not allow raw `#` (fragment) or `?` (query) characters to prematurely terminate the path component.
+2. **Tighten Parameter Quoting:** Updated the URL quoting configuration in `sanic/app.py` so `#` and `?` inside path parameter values are percent-encoded (`%23`, `%3F`) while preserving intentional route structure and query arguments passed separately.
+3. **TDD & Regression Safety:** Added `test_url_for_path_escaping` in `tests/test_url_building.py` to assert proper encoding of `#` and `?` without breaking existing slash/path parameter tests.
 
 ## 4. Implementation Diff
 ```diff
